@@ -16,19 +16,29 @@ st.set_page_config(page_title="안전교육 자동화 시스템", layout="wide")
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
-# 🚪 [도어락 화면] 로그인이 안 되어 있으면 암호 입력창 표시
+# 🚪 [도어락 화면] 엔터키 지원 버전
 if not st.session_state.logged_in:
     st.title("🚧 창조종합건설 안전관리 시스템")
     st.info("본 시스템은 인산지구 배수개선사업 현장 전용입니다. 인증 후 이용 가능합니다.")
     
-    pwd_input = st.text_input("현장 인증 암호를 입력하세요", type="password")
-    if st.button("인증하기"):
-        if pwd_input == SITE_PASSWORD:
+    # [수정] on_change를 활용해 엔터키 입력 시 바로 함수가 실행되도록 합니다.
+    def check_password():
+        if st.session_state.password_attempt == SITE_PASSWORD:
             st.session_state.logged_in = True
-            st.rerun()
         else:
             st.error("❌ 암호가 틀렸습니다. 현장 사무실에 문의하세요.")
-    st.stop() # 인증 전까지 아래 코드는 절대 실행 안 됨
+
+    st.text_input(
+        "현장 인증 암호를 입력하세요", 
+        type="password", 
+        key="password_attempt", 
+        on_change=check_password  # 엔터 치면 이 함수가 실행됩니다!
+    )
+    
+    if st.button("인증하기"):
+        check_password()
+        
+    st.stop()
 
 # ---------------------------------------------------------
 # 🔓 여기서부터는 인증 성공 시에만 보이는 메인 화면입니다.
@@ -191,4 +201,5 @@ if st.session_state.files_ready:
     with dl_col2:
         with open(st.session_state.photo_file, "rb") as f:
             st.download_button("📥 사진대지 다운로드", f, file_name=st.session_state.photo_file)
+
 
